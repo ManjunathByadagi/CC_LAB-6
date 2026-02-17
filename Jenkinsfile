@@ -13,16 +13,19 @@ pipeline {
         }
 
         stage('Deploy Backend Containers') {
-            steps {
-                sh '''
-                docker network create app-network || true
-                docker rm -f backend1 backend2 || true
+    steps {
+        sh '''
+        docker network create app-network || true
 
-                docker run -d --name backend1 --network app-network backend-app
-                docker run -d --name backend2 --network app-network backend-app
-                '''
-            }
-        }
+        # Remove all backend containers safely
+        docker rm -f $(docker ps -aq --filter "name=backend") 2>/dev/null || true
+
+        docker run -d --name backend1 --network app-network backend-app
+        docker run -d --name backend2 --network app-network backend-app
+        '''
+    }
+}
+
 
         stage('Deploy NGINX Load Balancer') {
             steps {
